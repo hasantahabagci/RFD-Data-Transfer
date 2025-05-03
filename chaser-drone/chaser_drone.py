@@ -1,20 +1,29 @@
 import serial
 import json
 
-# Open serial port to RFD modem
-ser = serial.Serial('COM4', 57600, timeout=5)  # Adjust COM port for your receiver
+# Configure this to the other end’s RF‐module serial port
+SERIAL_PORT = '/dev/ttyUSB1'
+BAUD_RATE = 9600
 
-try:
-    while True:
-        incoming_data = ser.readline().decode('utf-8').strip()
-
-        if incoming_data:
+def main():
+    ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+    try:
+        while True:
+            line = ser.readline().decode('utf-8').strip()
+            if not line:
+                continue
             try:
-                location = json.loads(incoming_data)
-                print(f"Received → lat: {location['lat']}, lon: {location['lon']}, alt: {location['alt']}m")
+                data = json.loads(line)
+                lat = data.get('lat')
+                lon = data.get('lon')
+                alt = data.get('alt')
+                print(f"Received → lat: {lat}, lon: {lon}, alt: {alt}")
             except json.JSONDecodeError:
-                print(f"Invalid JSON: {incoming_data}")
-except KeyboardInterrupt:
-    print("Reception stopped.")
-finally:
-    ser.close()
+                print(f"Failed to parse JSON: {line}")
+    except KeyboardInterrupt:
+        print("Stopping receiver")
+    finally:
+        ser.close()
+
+if __name__ == '__main__':
+    main()

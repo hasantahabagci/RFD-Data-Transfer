@@ -3,12 +3,12 @@ import json
 
 # Configure the serial port (update the port and baud rate as needed)
 ser = serial.Serial(
-    port='/dev/tty.usbserial-A10LF01N',  # Update this to your serial port
+    port='/dev/ttyUSB0',  # Update this to your serial port
     baudrate=57600,       # Default baudrate for RFD900x
     timeout=1
 )
 
-
+# UnicodeDecodeError: 'utf-8' codec can't decode byte 0x84 in position 1: invalid start byte
 try:
     while True:
         if ser.in_waiting > 0:

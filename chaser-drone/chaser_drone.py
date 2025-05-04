@@ -1,43 +1,29 @@
-#!/usr/bin/env python3
-import json, serial, time
+import serial
+import json
 
-PORT = "/dev/tty.usbserial-A106AUJN"    # ★ adjust (COMx on Windows)
-BAUD = 57600
+# Configure this to the other end’s RF‐module serial port
+SERIAL_PORT = '/dev/tty.usbserial-A106AUJN'
+BAUD_RATE = 115200
 
 def main():
-    with serial.Serial(PORT, BAUD, timeout=1) as ser:
-        # Optional: clear any junk still in the buffer
-        ser.reset_input_buffer()
-
+    ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+    try:
         while True:
-            raw = ser.readline()          # bytes   (blocks ≤ timeout)
-            if not raw:
-                continue                  # timeout, no data
-
-            # 1) decode   2) strip newline/CR
-            try:
-                line = raw.decode("utf-8").strip()
-            except UnicodeDecodeError:
-                # Non‑UTF‑8 garbage – just drop it
-                continue
-
-            # Empty after stripping? Ignore.
+            line = ser.readline().decode('utf-8').strip()
             if not line:
                 continue
-
-            # Parse JSON
             try:
-                pkt = json.loads(line)
+                data = json.loads(line)
+                lat = data.get('lat')
+                lon = data.get('lon')
+                alt = data.get('alt')
+                print(f"Received → lat: {lat}, lon: {lon}, alt: {alt}")
             except json.JSONDecodeError:
-                # Received something but it wasn’t valid JSON
-                continue
-
-            # At this point we trust pkt
-            print(f"{time.strftime('%H:%M:%S')}  "
-                  f"Lat {pkt['lat']:.6f}  Lon {pkt['lon']:.6f}  Alt {pkt['alt']:.1f} m")
-
-if __name__ == "__main__":
-    try:
-        main()
+                print(f"Failed to parse JSON: {line}")
     except KeyboardInterrupt:
-        pass
+        print("Stopping receiver")
+    finally:
+        ser.close()
+
+if __name__ == '__main__':
+    main()

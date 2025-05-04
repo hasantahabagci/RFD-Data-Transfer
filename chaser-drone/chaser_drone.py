@@ -1,29 +1,26 @@
-import serial
-import json
+#!/usr/bin/env python3
+import json, serial
 
-# Configure this to the other end’s RF‐module serial port
-SERIAL_PORT = '/dev/ttyUSB1'
-BAUD_RATE = 9600
+PORT = "COM5"        # Windows example – adjust as needed
+BAUD = 57600
 
 def main():
-    ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+    ser = serial.Serial(PORT, BAUD, timeout=1)
     try:
         while True:
-            line = ser.readline().decode('utf-8').strip()
+            line = ser.readline()          # Blocks until '\n' or timeout
             if not line:
-                continue
+                continue                   # Timeout – no data this cycle
             try:
-                data = json.loads(line)
-                lat = data.get('lat')
-                lon = data.get('lon')
-                alt = data.get('alt')
-                print(f"Received → lat: {lat}, lon: {lon}, alt: {alt}")
+                pkt = json.loads(line)
+                print(f"Lat: {pkt['lat']:.6f}  Lon: {pkt['lon']:.6f}  Alt: {pkt['alt']:.1f} m")
             except json.JSONDecodeError:
-                print(f"Failed to parse JSON: {line}")
+                # Corrupt or partial line – ignore or log
+                continue
     except KeyboardInterrupt:
-        print("Stopping receiver")
+        pass
     finally:
         ser.close()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,28 +1,33 @@
-#!/usr/bin/env python3
-import json, time, serial, random      # replace random with real telemetry
+import serial
+import json
+import time
+import random  # Replace this with your actual GPS source
+from mav_handler import MAVHandler
 
-PORT      = "/dev/ttyUSB0"             # ★ adjust
-BAUD      = 57600
-SEND_HZ   = 5
+drone = MAVHandler("127.0.0.1:14538")  
 
-def get_sample():
-    # stub – swap in your real source
-    return {
-        "lat": 41.085000 + random.uniform(-1e-6, 1e-6),
-        "lon": 29.044000 + random.uniform(-1e-6, 1e-6),
-        "alt": 120.0     + random.uniform(-0.5, 0.5),
-    }
+# Open serial port to RFD modem
+ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)  # Adjust COM port for your setup
 
-def main():
-    with serial.Serial(PORT, BAUD, timeout=1) as ser:
-        period = 1 / SEND_HZ
-        while True:
-            pkt = json.dumps(get_sample()).encode() + b"\n"
-            ser.write(pkt)
-            time.sleep(period)
+try:
+    while True:
+        # Simulated real-time location data (replace with actual GPS readings)
+        lat, lon, alt = drone.get_location()
+        location_data = {
+            "lat": lat,
+            "lon": lon,
+            "alt": alt
+        }
 
-if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        pass
+        # Serialize to JSON
+        json_data = json.dumps(location_data)
+
+        # Send over RFD
+        ser.write((json_data + '\n').encode('utf-8'))  # Newline helps the receiver know when message ends
+        print(f"Sent: {json_data}")
+
+        time.sleep(0.01)  # Send every second
+except KeyboardInterrupt:
+    print("Transmission stopped.")
+finally:
+    ser.close()

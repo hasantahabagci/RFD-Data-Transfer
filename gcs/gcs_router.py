@@ -25,7 +25,7 @@ def inter_receiver_thread():
             continue
         try:
             inter_info = json.loads(inter_data)
-            print(bcolors.OKGREEN + f"Received inter data: {inter_info}" + bcolors.ENDC)
+            print(bcolors.OKCYAN + f"Received inter data: {inter_info}" + bcolors.ENDC)
         except json.JSONDecodeError:
             print("Error decoding inter data")
 
@@ -58,9 +58,13 @@ while True:
     vx = location.get('vx')
     vy = location.get('vy')
     vz = location.get('vz')
-    if lat is None or lon is None or alt is None or not isinstance(lat, (int, float)) or not isinstance(lon, (int, float)) or not isinstance(alt, (int, float)) or lat < -90 or lat > 90 or lon < -180 or lon > 180:
+    #if lat is None or lon is None or alt is None or not isinstance(lat, (int, float)) or not isinstance(lon, (int, float)) or not isinstance(alt, (int, float)) or lat < -90 or lat > 90 or lon < -180 or lon > 180:
+    if lat is None or lon is None or alt is None or vx is None or vy is None or vz is None or \
+        not isinstance(lat, (int, float)) or not isinstance(lon, (int, float)) or not isinstance(alt, (int, float)) or \
+        not isinstance(vx, (int, float)) or not isinstance(vy, (int, float)) or not isinstance(vz, (int, float)) or \
+        lat < -90 or lat > 90 or lon < -180 or lon > 180:
         continue
-    print(bcolors.OKCYAN + f"Received Target Data → lat: {lat}, lon: {lon}, alt: {alt}, vx: {vx}, vy: {vy}, vz: {vz}" + bcolors.ENDC)
+    print(bcolors.OKGREEN + bcolors.BOLD + f"Received Target Data → lat: {lat}, lon: {lon}, alt: " +bcolors.UNDERLINE + bcolors.HEADER + f"{alt}"+bcolors.ENDC+bcolors.OKGREEN + bcolors.BOLD +f", vx: {vx}, vy: {vy}, vz: {vz}" + bcolors.ENDC)
     
     chaser_radio.write(data)
     # line = target_radio.readline().decode('utf-8').strip()
